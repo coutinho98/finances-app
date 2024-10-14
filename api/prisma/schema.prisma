@@ -20,6 +20,8 @@ enum BankAccountType {
   CHECKING
   INVESTMENT
   CASH
+
+  @@map("bank_account_type")
 }
 
 model BankAccount {
