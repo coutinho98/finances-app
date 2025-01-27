@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticateDto } from './dto/authenticate.dto';
 import { UsersRepository } from 'src/shared/database/repositories/users.repositories';
 
@@ -9,10 +9,14 @@ export class AuthService {
   async authenticate(authenticateDto: AuthenticateDto) {
     const { email } = authenticateDto;
 
-    const users = await this.usersRepo.findUnique({
+    const user = await this.usersRepo.findUnique({
       where: { email },
     });
 
-    return { users };
+    if (!user) {
+      throw new UnauthorizedException('Invalid Credential');
+    }
+
+    return { user };
   }
 }
