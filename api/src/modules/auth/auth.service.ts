@@ -15,10 +15,14 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid Credential');
+      throw new UnauthorizedException('Invalid Credentials');
     }
 
     const isPasswordValid = await compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid Credentials');
+    }
 
     return { isPasswordValid };
   }
