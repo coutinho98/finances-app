@@ -1,31 +1,56 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UsersRepository } from 'src/shared/database/repositories/users.repositories';
+import { PrismaService } from 'src/shared/database/prisma.service';
+import { hash } from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepo: UsersRepository) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
     const { name, email, password } = createUserDto;
 
-    const emailTaken = await this.usersRepo.findUnique({
+    const emailTaken = await this.prismaService.user.findUnique({
       where: { email },
-      select: { id: true },
     });
 
     if (emailTaken) {
       throw new ConflictException('This email is already in use.');
     }
 
-    const user = await this.usersRepo.create({
+    const hashedPassword = await hash(password, 12);
+
+    const user = await this.prismaService.user.create({
       data: {
-        name: createUserDto.name,
-        email: createUserDto.email,
-        password: createUserDto.password,
+        name,
+        email,
+        password: hashedPassword,
+        categories: {
+          createMany: {
+            data: [
+              // Income
+              { name: 'Salário', icon: 'salary', type: 'INCONE' },
+              { name: 'Freelance', icon: 'freelance', type: 'INCONE' },
+              { name: 'Outro', icon: 'other', type: 'INCONE' },
+              // Expense
+              { name: 'Casa', icon: 'home', type: 'EXPENSE' },
+              { name: 'Alimentação', icon: 'food', type: 'EXPENSE' },
+              { name: 'Educação', icon: 'education', type: 'EXPENSE' },
+              { name: 'Lazer', icon: 'fun', type: 'EXPENSE' },
+              { name: 'Mercado', icon: 'grocery', type: 'EXPENSE' },
+              { name: 'Roupas', icon: 'clothes', type: 'EXPENSE' },
+              { name: 'Transporte', icon: 'transport', type: 'EXPENSE' },
+              { name: 'Viagem', icon: 'travel', type: 'EXPENSE' },
+              { name: 'Outro', icon: 'other', type: 'EXPENSE' },
+            ],
+          },
+        },
       },
     });
 
-    return user;
+    return {
+      name: user.name,
+      email: user.email,
+    };
   }
 }

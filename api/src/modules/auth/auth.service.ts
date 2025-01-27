@@ -1,13 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticateDto } from './dto/authenticate.dto';
 import { UsersRepository } from 'src/shared/database/repositories/users.repositories';
+import { compare } from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
   constructor(private readonly usersRepo: UsersRepository) {}
 
   async authenticate(authenticateDto: AuthenticateDto) {
-    const { email } = authenticateDto;
+    const { email, password } = authenticateDto;
 
     const user = await this.usersRepo.findUnique({
       where: { email },
@@ -17,6 +18,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Credential');
     }
 
-    return { user };
+    const isPasswordValid = await compare(password, user.password);
+
+    return { isPasswordValid };
   }
 }
