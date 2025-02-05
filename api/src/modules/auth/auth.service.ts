@@ -28,6 +28,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Credentials');
     }
 
-    return { isPasswordValid };
+    const accessToken = await this.JwtService.signAsync({ sub: user.id });
+
+    return { accessToken };
   }
 }
